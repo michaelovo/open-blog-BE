@@ -1,8 +1,8 @@
 {
   "development": {
-    "username": "",
-    "password": "",
-    "database": "",
+    "username": "root",
+    "password": "prof@dgp.com",
+    "database": "node_blog_db",
     "host": "127.0.0.1",
     "dialect": "mysql"
   },
