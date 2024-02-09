@@ -1,6 +1,7 @@
 const express = require('express');
 const PostController = require('../src/controllers/PostController');
 const CategoryController = require('../src/controllers/CategoryController');
+const AuthController = require('../src/controllers/AuthController');
 const router = express.Router();
 
 
@@ -17,5 +18,9 @@ router.post('/category/create', CategoryController.storeCategory);
 router.get("/category/:categoryId/fetch", CategoryController.fetchAllCategoryById);
 router.patch("/category/:categoryId/update", CategoryController.updateCategory);
 router.delete("/category/:categoryId/delete", CategoryController.deleteCategory);
+
+//Category routes
+router.post('/register', AuthController.register);
+
 
 module.exports = router;

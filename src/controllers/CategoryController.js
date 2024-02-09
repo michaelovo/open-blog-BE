@@ -18,37 +18,50 @@ function fetchAllCategories(req, res) {
 }
 
 function storeCategory(req, res) {
-    const category = {
-        "name": req.body.name
-    }
 
-    const schema = {
-        name: "string|max:50|min:2|nullable:false|optional:false"
-    }
-    const check = new Validator();
-    const validatorResponse = check.validate(category, schema);
+    models.Category.findOne({ where: { name: req.body.name } }).then(result => {
+        if (result) {
+            res.status(409).json({
+                "message": "Duplicate! Name already exist!",
+            });
+        } else {
+            const category = {
+                "name": req.body.name
+            }
 
-    if (validatorResponse !== true) {
-        return res.status(400).json({
-            "status": false,
-            "message": "Validation failed!",
-            "error": validatorResponse
-        });
-    }
+            const schema = {
+                name: "string|max:50|min:2|nullable:false|optional:false"
+            }
+            const check = new Validator();
+            const validatorResponse = check.validate(category, schema);
 
-    models.Category.create(category).then(result => {
-        res.status(200).json({
-            "status": true,
-            "message": "Category created successfully",
-            "category": result
-        });
+            if (validatorResponse !== true) {
+                return res.status(400).json({
+                    "status": false,
+                    "message": "Validation failed!",
+                    "error": validatorResponse
+                });
+            }
+
+            models.Category.create(category).then(result => {
+                res.status(200).json({
+                    "status": true,
+                    "message": "Category created successfully",
+                    "category": result
+                });
+            }).catch(error => {
+                res.status(500).json({
+                    "status": true,
+                    "message": "Something went wrong",
+                    "error": error
+                });
+            });
+
+        }
     }).catch(error => {
-        res.status(500).json({
-            "status": true,
-            "message": "Something went wrong",
-            "error": error
-        });
+
     });
+
 }
 
 function fetchAllCategoryById(req, res) {
@@ -98,18 +111,29 @@ function updateCategory(req, res) {
         });
     }
 
-    models.Category.update(category, { where: { id: categoryId } }).then(result => {
-        res.status(200).json({
-            "status": true,
-            "message": "Category updated successfully",
-            "category": category
-        });
+    models.Post.findOne({ where: { id: categoryId } }).then(result => {
+        if (result) {
+            models.Category.update(category, { where: { id: categoryId } }).then(result => {
+                res.status(200).json({
+                    "status": true,
+                    "message": "Category updated successfully",
+                    "category": category
+                });
+            }).catch(error => {
+                res.status(500).json({
+                    "status": false,
+                    "message": "Something went wrong",
+                    "error": error
+                });
+            });
+        } else {
+            res.status(404).json({
+                "message": "The selected category does not exist!",
+            });
+        }
+
     }).catch(error => {
-        res.status(500).json({
-            "status": false,
-            "message": "Something went wrong",
-            "error": error
-        });
+
     });
 
 }

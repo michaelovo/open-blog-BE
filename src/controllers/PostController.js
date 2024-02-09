@@ -113,19 +113,32 @@ function updatePost(req, res) {
         });
     }
 
-    models.Post.update(post, { where: { id: postId, user_id: userId } }).then(result => {
-        res.status(200).json({
-            "status": true,
-            messsage: 'Post updated successfully',
-            "post": post
-        });
+    models.Post.findOne({ where: { id: postId, user_id: userId } }).then(result => {
+
+        if (result) {
+            models.Post.update(post, { where: { id: postId, user_id: userId } }).then(result => {
+                res.status(200).json({
+                    "status": true,
+                    messsage: 'Post updated successfully',
+                    "post": post
+                });
+            }).catch(error => {
+                res.status(500).json({
+                    "status": false,
+                    messsage: 'Something went wrong',
+                    "error": error
+                });
+            });
+        } else {
+            res.status(404).json({
+                "message": "The selected post does not exist!",
+            });
+        }
     }).catch(error => {
-        res.status(500).json({
-            "status": false,
-            messsage: 'Something went wrong',
-            "error": error
-        });
+
     });
+
+
 }
 
 function deletePost(req, res) {
