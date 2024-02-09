@@ -1,4 +1,5 @@
-const models = require('../models')
+const models = require('../models');
+const Validator = require('fastest-validator');
 
 function fetchAllPosts(req, res) {
     models.Post.findAll().then(result => {
@@ -23,6 +24,23 @@ function store(req, res) {
         image_url: req.body.image_url,
         category_id: req.body.category_id,
         user_id: 1
+    }
+
+    const schema = {
+        title: "string|max:100|min:2|optional:false|nullable:false",
+        content: "string|max:500|min:2|optional:false|nullable:false",
+        image_url: "string|optional:true|nullable:true",
+        category_id: "number|positive:true|integer:true|min:1|optional:false|nullable:false"
+    }
+    const check = new Validator();
+    const validatorResponse = check.validate(post, schema);
+
+    if (validatorResponse !== true) {
+        return res.status(400).json({
+            "status": false,
+            "message": "Validation failed!",
+            "error": validatorResponse
+        });
     }
 
     models.Post.create(post).then(result => {
@@ -77,6 +95,23 @@ function updatePost(req, res) {
     }
 
     const userId = 1;
+
+    const schema = {
+        title: "string|max:100|min:2|optional:false|nullable:false",
+        content: "string|max:500|min:2|optional:false|nullable:false",
+        image_url: "string|optional:true|nullable:true",
+        category_id: "number|positive:true|integer:true|min:1|optional:false|nullable:false"
+    }
+    const check = new Validator();
+    const validatorResponse = check.validate(post, schema);
+
+    if (validatorResponse !== true) {
+        return res.status(400).json({
+            "status": false,
+            "message": "Validation failed!",
+            "error": validatorResponse
+        });
+    }
 
     models.Post.update(post, { where: { id: postId, user_id: userId } }).then(result => {
         res.status(200).json({

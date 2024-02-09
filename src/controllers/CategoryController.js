@@ -1,4 +1,5 @@
 const models = require('../models');
+const Validator = require('fastest-validator');
 
 function fetchAllCategories(req, res) {
     models.Category.findAll().then(result => {
@@ -19,6 +20,20 @@ function fetchAllCategories(req, res) {
 function storeCategory(req, res) {
     const category = {
         "name": req.body.name
+    }
+
+    const schema = {
+        name: "string|max:50|min:2|nullable:false|optional:false"
+    }
+    const check = new Validator();
+    const validatorResponse = check.validate(category, schema);
+
+    if (validatorResponse !== true) {
+        return res.status(400).json({
+            "status": false,
+            "message": "Validation failed!",
+            "error": validatorResponse
+        });
     }
 
     models.Category.create(category).then(result => {
@@ -67,6 +82,20 @@ function updateCategory(req, res) {
 
     const category = {
         "name": req.body.name
+    }
+
+    const schema = {
+        name: "string|max:50|min:2|nullable:false|optional:false"
+    }
+    const check = new Validator();
+    const validatorResponse = check.validate(category, schema);
+
+    if (validatorResponse !== true) {
+        return res.status(400).json({
+            "status": false,
+            "message": "Validation failed!",
+            "error": validatorResponse
+        });
     }
 
     models.Category.update(category, { where: { id: categoryId } }).then(result => {
