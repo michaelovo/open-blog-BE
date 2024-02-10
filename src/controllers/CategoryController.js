@@ -10,7 +10,7 @@ function fetchAllCategories(req, res) {
         });
     }).catch(error => {
         res.status(500).json({
-            "status": true,
+            "status": false,
             "message": "Something went wrong",
             "error": error
         });
@@ -26,11 +26,13 @@ function storeCategory(req, res) {
             });
         } else {
             const category = {
-                "name": req.body.name
+                "name": req.body.name,
+                "status_id": req.body.status_id
             }
 
             const schema = {
-                name: "string|max:50|min:2|nullable:false|optional:false"
+                name: "string|max:50|min:2|nullable:false|optional:false",
+                status_id: "number|positive:true|integer:true|min:1|optional:false|nullable:false"
             }
             const check = new Validator();
             const validatorResponse = check.validate(category, schema);
@@ -59,12 +61,16 @@ function storeCategory(req, res) {
 
         }
     }).catch(error => {
-
+        res.status(500).json({
+            "status": false,
+            "message": "Something went wrong",
+            "error": error
+        });
     });
 
 }
 
-function fetchAllCategoryById(req, res) {
+function fetchCategoryById(req, res) {
     const categoryId = req.params.categoryId;
 
     models.Category.findByPk(categoryId).then(result => {
@@ -74,12 +80,13 @@ function fetchAllCategoryById(req, res) {
                 "message": "The selected category does not exist!!",
                 "category": result
             });
-        }
-        res.status(404).json({
-            "status": false,
-            "message": "The selected category does not exist!!",
+        } else {
+            res.status(404).json({
+                "status": false,
+                "message": "The selected category does not exist!!",
 
-        });
+            });
+        }
 
     }).catch(error => {
         res.status(500).json({
@@ -94,11 +101,13 @@ function updateCategory(req, res) {
     const categoryId = req.params.categoryId;
 
     const category = {
-        "name": req.body.name
+        "name": req.body.name,
+        "status_id": req.body.status_id
     }
 
     const schema = {
-        name: "string|max:50|min:2|nullable:false|optional:false"
+        name: "string|max:50|min:2|nullable:false|optional:false",
+        status_id: "number|positive:true|integer:true|min:1|optional:false|nullable:false"
     }
     const check = new Validator();
     const validatorResponse = check.validate(category, schema);
@@ -111,7 +120,7 @@ function updateCategory(req, res) {
         });
     }
 
-    models.Post.findOne({ where: { id: categoryId } }).then(result => {
+    models.Category.findOne({ where: { id: categoryId } }).then(result => {
         if (result) {
             models.Category.update(category, { where: { id: categoryId } }).then(result => {
                 res.status(200).json({
@@ -133,7 +142,11 @@ function updateCategory(req, res) {
         }
 
     }).catch(error => {
-
+        res.status(500).json({
+            "status": false,
+            "message": "Something went wrong",
+            "error": error
+        });
     });
 
 }
@@ -166,7 +179,7 @@ function deleteCategory(req, res) {
 module.exports = {
     fetchAllCategories: fetchAllCategories,
     storeCategory: storeCategory,
-    fetchAllCategoryById: fetchAllCategoryById,
+    fetchCategoryById: fetchCategoryById,
     updateCategory: updateCategory,
     deleteCategory: deleteCategory
 }

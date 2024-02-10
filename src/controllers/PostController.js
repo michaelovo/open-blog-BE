@@ -23,6 +23,7 @@ function store(req, res) {
         content: req.body.content,
         image_url: req.body.image_url,
         category_id: req.body.category_id,
+        status_id: req.body.status_id,
         user_id: 1
     }
 
@@ -30,7 +31,8 @@ function store(req, res) {
         title: "string|max:100|min:2|optional:false|nullable:false",
         content: "string|max:500|min:2|optional:false|nullable:false",
         image_url: "string|optional:true|nullable:true",
-        category_id: "number|positive:true|integer:true|min:1|optional:false|nullable:false"
+        category_id: "number|positive:true|integer:true|min:1|optional:false|nullable:false",
+        status_id: "number|positive:true|integer:true|min:1|optional:false|nullable:false"
     }
     const check = new Validator();
     const validatorResponse = check.validate(post, schema);
@@ -92,6 +94,7 @@ function updatePost(req, res) {
         content: req.body.content,
         image_url: req.body.image_url,
         category_id: req.body.category_id,
+        status_id: req.body.status_id,
     }
 
     const userId = 1;
@@ -100,7 +103,8 @@ function updatePost(req, res) {
         title: "string|max:100|min:2|optional:false|nullable:false",
         content: "string|max:500|min:2|optional:false|nullable:false",
         image_url: "string|optional:true|nullable:true",
-        category_id: "number|positive:true|integer:true|min:1|optional:false|nullable:false"
+        category_id: "number|positive:true|integer:true|min:1|optional:false|nullable:false",
+        status_id: "number|positive:true|integer:true|min:1|optional:false|nullable:false"
     }
     const check = new Validator();
     const validatorResponse = check.validate(post, schema);
@@ -135,7 +139,11 @@ function updatePost(req, res) {
             });
         }
     }).catch(error => {
-
+        res.status(500).json({
+            "status": false,
+            "message": "Something went wrong",
+            "error": error
+        });
     });
 
 

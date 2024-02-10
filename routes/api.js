@@ -15,12 +15,13 @@ router.delete("/post/:postId/delete", PostController.deletePost);
 //Category routes
 router.get('/categories', CategoryController.fetchAllCategories);
 router.post('/category/create', CategoryController.storeCategory);
-router.get("/category/:categoryId/fetch", CategoryController.fetchAllCategoryById);
+router.get("/category/:categoryId/fetch", CategoryController.fetchCategoryById);
 router.patch("/category/:categoryId/update", CategoryController.updateCategory);
 router.delete("/category/:categoryId/delete", CategoryController.deleteCategory);
 
-//Category routes
+//Auth routes
 router.post('/register', AuthController.register);
+router.post('/login', AuthController.login);
 
 
 module.exports = router;
