@@ -121,7 +121,7 @@ function login(req, res) {
                     const token = jwt.sign({
                         email: user.email,
                         id: user.id
-                    }, 'secret', function (err, token) {
+                    }, process.env.JWT_KEY, function (err, token) {
                         res.status(200).json({
                             "status": true,
                             "message": "Login successful",
