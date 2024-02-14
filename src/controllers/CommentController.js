@@ -1,12 +1,27 @@
 const models = require('../models');
 const Validator = require('fastest-validator');
 
-function fetchAllPosts(req, res) {
-    models.Post.findAll().then(result => {
+function fetchAllComments(req, res) {
+    models.Comment.findAll(
+        {
+            include: [
+                {
+                    model: models.User,
+                    as: 'postedBy',
+                    attributes: ['id', 'username', 'email'],
+                },
+                {
+                    model: models.Post,
+                    as: 'post',
+                    attributes: ['id', 'title'],
+                }
+            ],
+        }
+    ).then(result => {
         res.status(200).json({
             "status": true,
-            "message": "Post retrieved successfully",
-            "post": result
+            "message": "Comments retrieved successfully",
+            "comment": result
         });
     }).catch(error => {
         res.status(500).json({
@@ -18,22 +33,18 @@ function fetchAllPosts(req, res) {
 }
 
 function store(req, res) {
-    const post = {
-        title: req.body.title,
+    const comment = {
         content: req.body.content,
-        image_url: req.body.image_url,
-        category_id: req.body.category_id,
-        user_id: 1
+        post_id: req.body.post_id,
+        user_id: req.userData.id,
     }
 
     const schema = {
-        title: "string|max:100|min:2|optional:false|nullable:false",
         content: "string|max:500|min:2|optional:false|nullable:false",
-        image_url: "string|optional:true|nullable:true",
-        category_id: "number|positive:true|integer:true|min:1|optional:false|nullable:false"
+        post_id: "number|positive:true|integer:true|min:1|optional:false|nullable:false"
     }
     const check = new Validator();
-    const validatorResponse = check.validate(post, schema);
+    const validatorResponse = check.validate(comment, schema);
 
     if (validatorResponse !== true) {
         return res.status(400).json({
@@ -43,37 +54,53 @@ function store(req, res) {
         });
     }
 
-    models.Post.create(post).then(result => {
+    models.Comment.create(comment).then(result => {
         res.status(200).json({
             "status": true,
-            messsage: 'Post created successfully',
-            "post": result
+            "messsage": 'Comment created successfully',
+            "comment": result
         });
     }).catch(error => {
         res.status(500).json({
             "status": false,
-            messsage: 'Something went wrong',
+            "messsage": 'Something went wrong',
             "error": error
         });
     });
 }
 
-function fetchPostById(req, res) {
-    const postId = req.params.postId;
+function fetchCommentById(req, res) {
+    const commentId = req.params.commentId;
 
-    models.Post.findByPk(postId).then(result => {
+    models.Comment.findByPk(commentId,
+        {
+            include: [
+                {
+                    model: models.User,
+                    as: 'postedBy',
+                    attributes: ['id', 'username', 'email'],
+                },
+                {
+                    model: models.Post,
+                    as: 'post',
+                    attributes: ['id', 'title'],
+                }
+            ],
+        }
+    ).then(result => {
         if (result) {
             res.status(200).json({
                 "status": true,
                 "message": "Data retrieved successfuly",
-                "post": result
+                "comment": result
+            });
+        } else {
+            res.status(404).json({
+                "status": false,
+                "message": "The selected Comment does not exist!!",
+
             });
         }
-        res.status(404).json({
-            "status": false,
-            "message": "The selected post does not exist!!",
-
-        });
     }).catch(error => {
         res.status(500).json({
             "status": false,
@@ -83,27 +110,21 @@ function fetchPostById(req, res) {
     });
 }
 
-function updatePost(req, res) {
+function updateComment(req, res) {
 
-    const postId = req.params.postId;
+    const commentId = req.params.commentId;
 
-    const post = {
-        title: req.body.title,
+    const comment = {
         content: req.body.content,
-        image_url: req.body.image_url,
-        category_id: req.body.category_id,
     }
 
-    const userId = 1;
+    const userId = req.userData.id;
 
     const schema = {
-        title: "string|max:100|min:2|optional:false|nullable:false",
         content: "string|max:500|min:2|optional:false|nullable:false",
-        image_url: "string|optional:true|nullable:true",
-        category_id: "number|positive:true|integer:true|min:1|optional:false|nullable:false"
     }
     const check = new Validator();
-    const validatorResponse = check.validate(post, schema);
+    const validatorResponse = check.validate(comment, schema);
 
     if (validatorResponse !== true) {
         return res.status(400).json({
@@ -113,32 +134,47 @@ function updatePost(req, res) {
         });
     }
 
-    models.Post.update(post, { where: { id: postId, user_id: userId } }).then(result => {
-        res.status(200).json({
-            "status": true,
-            messsage: 'Post updated successfully',
-            "post": post
-        });
+    models.Comment.findOne({ where: { id: commentId, user_id: userId } }).then(result => {
+
+        if (result) {
+            models.Comment.update(comment, { where: { id: commentId, user_id: userId } }).then(result => {
+                res.status(200).json({
+                    "status": true,
+                    "messsage": 'Comment updated successfully',
+                    "comment": comment
+                });
+            }).catch(error => {
+                res.status(500).json({
+                    "status": false,
+                    messsage: 'Something went wrong',
+                    "error": error
+                });
+            });
+        } else {
+            res.status(404).json({
+                "message": "The selected comment does not exist!",
+            });
+        }
     }).catch(error => {
         res.status(500).json({
             "status": false,
-            messsage: 'Something went wrong',
+            "message": "Something went wrong",
             "error": error
         });
     });
 }
 
-function deletePost(req, res) {
+function deleteComment(req, res) {
 
-    const postId = req.params.postId;
+    const commentId = req.params.commentId;
 
-    const userId = 1;
+    const userId = req.userData.id;
 
-    models.Post.destroy({ where: { id: postId, user_id: userId } }).then(result => {
+    models.Comment.destroy({ where: { id: commentId, user_id: userId } }).then(result => {
         if (result) {
             res.status(200).json({
                 "status": true,
-                "messsage": 'Post delete successfully',
+                "messsage": 'Comment delete successfully',
             });
         }
         res.status(404).json({
@@ -149,16 +185,57 @@ function deletePost(req, res) {
     }).catch(error => {
         res.status(500).json({
             "status": false,
-            messsage: 'Something went wrong',
+            "messsage": 'Something went wrong',
             "error": error
         });
     });
 }
 
+function fetchPostComments(req, res) {
+    const postId = req.params.postId;
+
+    models.Comment.findAll({
+        where: { post_id: postId },
+        include: [
+            {
+                model: models.User,
+                as: 'postedBy',
+                attributes: ['id', 'username', 'email'],
+            },
+            {
+                model: models.Post,
+                as: 'post',
+                attributes: ['id', 'title'],
+            }
+        ],
+    }).then(result => {
+        if (result) {
+            res.status(200).json({
+                "status": true,
+                "message": "Data retrieved successfuly",
+                "comment": result
+            });
+        } else {
+            res.status(404).json({
+                "status": false,
+                "message": "The selected post comment(s) does not exist!",
+
+            });
+        }
+    }).catch(error => {
+        res.status(500).json({
+            "status": false,
+            "message": "Something went wrong",
+            "error": error
+        })
+    });
+}
+
 module.exports = {
-    fetchAllPosts: fetchAllPosts,
+    fetchAllComments: fetchAllComments,
     store: store,
-    fetchPostById: fetchPostById,
-    updatePost: updatePost,
-    deletePost: deletePost
+    fetchCommentById: fetchCommentById,
+    updateComment: updateComment,
+    fetchPostComments: fetchPostComments,
+    deleteComment: deleteComment
 }

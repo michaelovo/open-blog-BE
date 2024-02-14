@@ -2,7 +2,32 @@ const models = require('../models');
 const Validator = require('fastest-validator');
 
 function fetchAllPosts(req, res) {
-    models.Post.findAll().then(result => {
+    models.Post.findAll(
+        {
+            include: [
+                {
+                    model: models.User,
+                    as: 'createdBy',
+                    attributes: ['id', 'username', 'email'],
+                },
+                {
+                    model: models.Status,
+                    as: 'status',
+                    attributes: ['id', 'name'],
+                },
+                {
+                    model: models.Category,
+                    as: 'category',
+                    attributes: ['id', 'name'],
+                },
+                {
+                    model: models.Comment,
+                    as: 'comments',
+                    attributes: ['id', 'content'],
+                }
+            ],
+        }
+    ).then(result => {
         res.status(200).json({
             "status": true,
             "message": "Post retrieved successfully",
@@ -24,7 +49,7 @@ function store(req, res) {
         //image_url: req.body.image_url,
         category_id: req.body.category_id,
         status_id: req.body.status_id,
-        user_id: 1
+        user_id: req.userData.id,
     }
 
     const schema = {
@@ -63,7 +88,32 @@ function store(req, res) {
 function fetchPostById(req, res) {
     const postId = req.params.postId;
 
-    models.Post.findByPk(postId).then(result => {
+    models.Post.findByPk(postId,
+        {
+            include: [
+                {
+                    model: models.User,
+                    as: 'createdBy',
+                    attributes: ['id', 'username', 'email'],
+                },
+                {
+                    model: models.Status,
+                    as: 'status',
+                    attributes: ['id', 'name'],
+                },
+                {
+                    model: models.Category,
+                    as: 'category',
+                    attributes: ['id', 'name'],
+                },
+                {
+                    model: models.Comment,
+                    as: 'comments',
+                    attributes: ['id', 'content'],
+                }
+            ],
+        }
+    ).then(result => {
         if (result) {
             res.status(200).json({
                 "status": true,
@@ -98,7 +148,7 @@ function updatePost(req, res) {
         status_id: req.body.status_id,
     }
 
-    const userId = 1;
+    const userId = req.userData.id;
 
     const schema = {
         title: "string|max:100|min:2|optional:false|nullable:false",
@@ -150,6 +200,7 @@ function updatePost(req, res) {
 
 function uploadPostImage(req, res) {
     const postId = req.params.postId;
+    const userId = req.userData.id;
 
     const post = {
         "image_url": req.file.filename,
@@ -170,7 +221,7 @@ function uploadPostImage(req, res) {
         });
     }
 
-    models.Post.findOne({ where: { id: postId } }).then(result => {
+    models.Post.findOne({ where: { id: postId, user_id: userId } }).then(result => {
         if (result) {
 
             models.Post.update(post, { where: { id: postId } }).then(result => {
